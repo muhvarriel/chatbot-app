@@ -1,6 +1,3 @@
-import 'dart:developer';
-
-import 'package:chatbot_app/ui/widgets/button_widget.dart';
 import 'package:chatbot_app/ui/widgets/custom_back_button.dart';
 import 'package:chatbot_app/ui/widgets/custom_text.dart';
 import 'package:chatbot_app/ui/widgets/slider_video.dart';
