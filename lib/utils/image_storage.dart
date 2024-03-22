@@ -9,10 +9,10 @@ class ImageStorage {
   static String get randomImage =>
       listImage[Random().nextInt(listImage.length)];
 
-  static String getImageByIndex(int indexImage, {double? size}) {
+  static String getImageByIndex(int indexImage) {
     int index =
         indexImage < listImage.length ? indexImage : (indexImage - indexImage);
 
-    return "$baseUrl${listImage[index]}${size != null ? "=w$size-h$size-p-k-rw-v1-nu-iv1" : ""}";
+    return "$baseUrl${listImage[index]}";
   }
 }

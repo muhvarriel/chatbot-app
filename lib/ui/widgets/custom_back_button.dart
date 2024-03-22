@@ -23,9 +23,10 @@ class CustomBackButton extends StatelessWidget {
       child: IconButton(
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minHeight: 0, minWidth: 0),
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios,
             size: 20,
+            color: color,
           ),
           onPressed: isEnable!
               ? pageCustom ??

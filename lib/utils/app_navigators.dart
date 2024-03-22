@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:chatbot_app/utils/image_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -30,13 +29,12 @@ void pageOpenAndRemovePrevious(Widget page) => Navigator.pushAndRemoveUntil(
 String formatDate(String format, {String? date}) =>
     DateFormat(format).format(DateTime.tryParse(date ?? "") ?? DateTime.now());
 
-List<int> generateUniqueRandomNumbers(int count, int min) {
+List<int> generateUniqueRandomNumbers(int count, int min, int max) {
   Random random = Random();
   List<int> randomNumbers = [];
 
   while (randomNumbers.length < count) {
-    int randomNumber =
-        min + random.nextInt((ImageStorage.listImage.length - 1) - min + 1);
+    int randomNumber = min + random.nextInt((max - 1) - min + 1);
     if (!randomNumbers.contains(randomNumber)) {
       randomNumbers.add(randomNumber);
     }

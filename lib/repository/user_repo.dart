@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:chatbot_app/model/chat_room.dart';
 import 'package:chatbot_app/utils/constants.dart';
 import 'package:chatbot_app/utils/image_storage.dart';
+import 'package:chatbot_app/utils/video_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
@@ -97,6 +98,37 @@ class UserRepo {
       log(end.difference(start).toString());
 
       ImageStorage.listImage = listImage;
+    } catch (e) {
+      print('error $e');
+    }
+  }
+
+  static Future<void> getVideoDrive() async {
+    Dio dio = Dio();
+
+    try {
+      final start = DateTime.now();
+
+      List<String> listVideo = [];
+
+      final response = await dio.get(
+          "https://drive.google.com/drive/folders/1TCmV46wJuDZ4162vnhXZfqw77A3L69qE");
+
+      List<String> result = extractDataIds(response.data);
+
+      for (var i = 0; i < result.length; i++) {
+        final responseFolder = await dio
+            .get("https://drive.google.com/drive/folders/${result[i]}");
+
+        listVideo.addAll(extractDataIds(responseFolder.data));
+      }
+
+      final end = DateTime.now();
+
+      log(listVideo.length.toString());
+      log(end.difference(start).toString());
+
+      VideoStorage.listVideo = listVideo;
     } catch (e) {
       print('error $e');
     }

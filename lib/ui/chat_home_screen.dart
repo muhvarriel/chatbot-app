@@ -1,11 +1,14 @@
 import 'package:chatbot_app/model/chat_room.dart';
 import 'package:chatbot_app/ui/chat_room_screen.dart';
+import 'package:chatbot_app/ui/chat_story_screen.dart';
+import 'package:chatbot_app/ui/chat_video_screen.dart';
 import 'package:chatbot_app/ui/widgets/custom_cached_image.dart';
 import 'package:chatbot_app/ui/widgets/custom_scrollbar.dart';
 import 'package:chatbot_app/ui/widgets/custom_text.dart';
 import 'package:chatbot_app/utils/app_navigators.dart';
 import 'package:chatbot_app/repository/chat_provider.dart';
 import 'package:chatbot_app/utils/image_storage.dart';
+import 'package:chatbot_app/utils/video_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +35,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   final ScrollController _scrollController = ScrollController();
 
   List<int> list = [];
+  List<int> listVideo = [];
 
   @override
   void initState() {
@@ -45,7 +49,9 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     await chatProvider.loadChatsFromString();
 
     setState(() {
-      list = generateUniqueRandomNumbers(8, 0);
+      list = generateUniqueRandomNumbers(8, 0, ImageStorage.listImage.length);
+      listVideo =
+          generateUniqueRandomNumbers(4, 0, VideoStorage.listVideo.length);
     });
   }
 
@@ -69,6 +75,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.sizeOf(context).width;
+    bool isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
 
     List<ChatRoom> filteredChatRoom = chatProvider.chats
         .where((e) =>
@@ -102,8 +109,6 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 .clamp(0, 1)
             : 0)
         : 0;
-
-    bool isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
 
     return Scaffold(
         floatingActionButton:
@@ -262,21 +267,43 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                   onTap: () {
                                     HapticFeedback.lightImpact();
 
-                                    pageOpen(StoryPreviewScreen(
+                                    pageOpen(ChatStoryScreen(
                                         index: index, listImage: list));
                                   },
-                                  child: Hero(
-                                    tag: ImageStorage.getImageByIndex(
-                                        list[index]),
-                                    child: customCachedImage(
-                                      width: 72,
-                                      height: 72,
-                                      withBorder: true,
-                                      url: ImageStorage.getImageByIndex(
-                                          list[index],
-                                          size: 72),
-                                    ),
-                                  ),
+                                  child: _buildStory(index),
+                                ),
+                              );
+                            }),
+                      ),
+                      const SizedBox(height: 16),
+                      const CustomText(
+                        text: "Short Videos",
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        padding: EdgeInsets.only(left: 16),
+                      ),
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        height: 192,
+                        child: ListView.builder(
+                            itemCount: listVideo.length,
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              Widget videoWidget = VideoWidget(
+                                  url: VideoStorage.getVideoByIndex(
+                                      listVideo[index]));
+
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                    left: index == 0 ? 16 : 0, right: 16),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                      width: 108,
+                                      height: 192,
+                                      color: Theme.of(context).cardColor,
+                                      child: videoWidget),
                                 ),
                               );
                             }),
@@ -294,9 +321,10 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                           const SizedBox(height: 6),
                           filteredChatRoom.isEmpty
                               ? Padding(
-                                  padding: EdgeInsets.only(
-                                      top: MediaQuery.sizeOf(context).height /
-                                          6),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical:
+                                          MediaQuery.sizeOf(context).height /
+                                              6),
                                   child: Center(
                                       child: _searchEditingController
                                               .text.isNotEmpty
@@ -427,211 +455,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                   itemBuilder: (context, index) {
                                     var chats = filteredChatRoom[index];
 
-                                    return CupertinoContextMenu.builder(
-                                        enableHapticFeedback: true,
-                                        actions: <Widget>[
-                                          CupertinoContextMenuAction(
-                                            onPressed: () {
-                                              HapticFeedback.lightImpact();
-                                              pageBack();
-                                            },
-                                            trailingIcon: CupertinoIcons.share,
-                                            child:
-                                                const CustomText(text: 'Share'),
-                                          ),
-                                          CupertinoContextMenuAction(
-                                            onPressed: () async {
-                                              HapticFeedback.lightImpact();
-                                              await chatProvider
-                                                  .deleteChat(chats.id ?? "");
-                                              pageBack();
-
-                                              setState(() {});
-                                            },
-                                            isDestructiveAction: true,
-                                            trailingIcon: CupertinoIcons.delete,
-                                            child: const CustomText(
-                                                text: 'Delete'),
-                                          ),
-                                        ],
-                                        builder: (context, animation) {
-                                          return animation.isCompleted
-                                              ? GestureDetector(
-                                                  onTap: () async {
-                                                    HapticFeedback
-                                                        .lightImpact();
-
-                                                    if (animation.isCompleted) {
-                                                      pageBack();
-                                                    }
-
-                                                    if (screenWidth > 600) {
-                                                      widget.onWeb!(
-                                                          chats.id ?? "");
-                                                    } else {
-                                                      await pageOpenWithResult(
-                                                          ChatRoomScreen(
-                                                              id: chats.id ??
-                                                                  ""));
-
-                                                      setState(() {});
-                                                    }
-                                                  },
-                                                  child: ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            20),
-                                                    child: SizedBox(
-                                                      width: screenWidth * 0.9,
-                                                      child: ChatRoomScreen(
-                                                        id: chats.id ?? "",
-                                                        preview: true,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                )
-                                              : GestureDetector(
-                                                  onTap: () async {
-                                                    HapticFeedback
-                                                        .lightImpact();
-
-                                                    if (animation.isCompleted) {
-                                                      pageBack();
-                                                    }
-
-                                                    if (screenWidth > 600) {
-                                                      widget.onWeb!(
-                                                          chats.id ?? "");
-                                                    } else {
-                                                      await pageOpenWithResult(
-                                                          ChatRoomScreen(
-                                                              id: chats.id ??
-                                                                  ""));
-
-                                                      setState(() {});
-                                                    }
-                                                  },
-                                                  child: Container(
-                                                    width: screenWidth *
-                                                        (animation.isCompleted
-                                                            ? 0.8
-                                                            : 1),
-                                                    decoration: BoxDecoration(
-                                                        color: Theme.of(context)
-                                                            .scaffoldBackgroundColor,
-                                                        borderRadius: BorderRadius
-                                                            .circular(animation
-                                                                    .isCompleted
-                                                                ? 20
-                                                                : 0)),
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        vertical: 16,
-                                                        horizontal: 16),
-                                                    child: Row(
-                                                      children: [
-                                                        customCachedImage(
-                                                          width: 45,
-                                                          height: 45,
-                                                          url: chats.image !=
-                                                                  null
-                                                              ? (ImageStorage
-                                                                      .baseUrl +
-                                                                  (chats.image ??
-                                                                      ""))
-                                                              : ImageStorage
-                                                                  .defaultImage,
-                                                        ),
-                                                        const SizedBox(
-                                                            width: 12),
-                                                        Expanded(
-                                                          child: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              Row(
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .center,
-                                                                children: [
-                                                                  Expanded(
-                                                                    child:
-                                                                        CustomText(
-                                                                      text: chats
-                                                                              .name ??
-                                                                          "-",
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w700,
-                                                                      overflow:
-                                                                          TextOverflow
-                                                                              .clip,
-                                                                      color: isDark
-                                                                          ? Colors
-                                                                              .white
-                                                                          : Colors
-                                                                              .black,
-                                                                    ),
-                                                                  ),
-                                                                  CustomText(
-                                                                    text: DateFormat("HH.mm").format(DateTime.tryParse((chats.messages?.isNotEmpty ?? false)
-                                                                            ? (chats.messages?.lastOrNull?.timestamp ??
-                                                                                "")
-                                                                            : (chats.created ??
-                                                                                "")) ??
-                                                                        DateTime
-                                                                            .now()),
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .w600,
-                                                                    fontSize:
-                                                                        12,
-                                                                    color: isDark
-                                                                        ? Colors
-                                                                            .grey
-                                                                            .shade400
-                                                                        : Colors
-                                                                            .grey
-                                                                            .shade700,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              const SizedBox(
-                                                                  height: 3),
-                                                              CustomText(
-                                                                text: chats
-                                                                        .messages
-                                                                        ?.lastOrNull
-                                                                        ?.content ??
-                                                                    "Start a message",
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500,
-                                                                fontSize: 14,
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                                maxLines: 1,
-                                                                color: isDark
-                                                                    ? Colors
-                                                                        .grey
-                                                                        .shade400
-                                                                    : Colors
-                                                                        .grey
-                                                                        .shade700,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                );
-                                        });
+                                    return _buildChat(chats);
                                   },
                                 ),
                         ],
@@ -645,183 +469,168 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           ],
         ));
   }
-}
 
-class StoryPreviewScreen extends StatefulWidget {
-  final int index;
-  final List<int> listImage;
-
-  const StoryPreviewScreen(
-      {super.key, required this.index, required this.listImage});
-
-  @override
-  State<StoryPreviewScreen> createState() => _StoryPreviewScreenState();
-}
-
-class _StoryPreviewScreenState extends State<StoryPreviewScreen> {
-  int index = 0;
-
-  @override
-  void initState() {
-    index = widget.index;
-    super.initState();
+  Widget _buildStory(int index) {
+    return Hero(
+      tag: ImageStorage.getImageByIndex(list[index]),
+      child: customCachedImage(
+        width: 72,
+        height: 72,
+        withBorder: true,
+        url: ImageStorage.getImageByIndex(list[index]),
+      ),
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    int lastIndex = widget.listImage.length - 1;
+  Widget _buildChat(ChatRoom chats) {
     double screenWidth = MediaQuery.sizeOf(context).width;
+    bool isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
 
-    return Scaffold(
-      body: Container(
-        padding: screenWidth > 600
-            ? EdgeInsets.symmetric(
-                horizontal: screenWidth / ((screenWidth > 1028) ? 3 : 4),
-                vertical: 30)
-            : EdgeInsets.zero,
-        decoration: BoxDecoration(color: Theme.of(context).cardColor),
-        child: ClipRRect(
-          borderRadius:
-              screenWidth > 600 ? BorderRadius.circular(20) : BorderRadius.zero,
-          child: Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Column(
-                children: [
-                  SizedBox(height: MediaQuery.viewPaddingOf(context).top),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Column(
+    return CupertinoContextMenu.builder(
+        enableHapticFeedback: true,
+        actions: <Widget>[
+          CupertinoContextMenuAction(
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              pageBack();
+            },
+            trailingIcon: CupertinoIcons.share,
+            child: const CustomText(text: 'Share'),
+          ),
+          CupertinoContextMenuAction(
+            onPressed: () async {
+              HapticFeedback.lightImpact();
+              await chatProvider.deleteChat(chats.id ?? "");
+              pageBack();
+
+              setState(() {});
+            },
+            isDestructiveAction: true,
+            trailingIcon: CupertinoIcons.delete,
+            child: const CustomText(text: 'Delete'),
+          ),
+        ],
+        builder: (context, animation) {
+          return animation.isCompleted
+              ? GestureDetector(
+                  onTap: () async {
+                    HapticFeedback.lightImpact();
+
+                    if (animation.isCompleted) {
+                      pageBack();
+                    }
+
+                    if (screenWidth > 600) {
+                      widget.onWeb!(chats.id ?? "");
+                    } else {
+                      await pageOpenWithResult(
+                          ChatRoomScreen(id: chats.id ?? ""));
+
+                      setState(() {});
+                    }
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: SizedBox(
+                      width: screenWidth * 0.9,
+                      child: ChatRoomScreen(
+                        id: chats.id ?? "",
+                        preview: true,
+                      ),
+                    ),
+                  ),
+                )
+              : GestureDetector(
+                  onTap: () async {
+                    HapticFeedback.lightImpact();
+
+                    if (animation.isCompleted) {
+                      pageBack();
+                    }
+
+                    if (screenWidth > 600) {
+                      widget.onWeb!(chats.id ?? "");
+                    } else {
+                      await pageOpenWithResult(
+                          ChatRoomScreen(id: chats.id ?? ""));
+
+                      setState(() {});
+                    }
+                  },
+                  child: Container(
+                    width: screenWidth * (animation.isCompleted ? 0.8 : 1),
+                    decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        borderRadius: BorderRadius.circular(
+                            animation.isCompleted ? 20 : 0)),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16, horizontal: 16),
+                    child: Row(
                       children: [
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: 4,
-                          child: Row(
+                        customCachedImage(
+                          width: 45,
+                          height: 45,
+                          url: chats.image != null
+                              ? (ImageStorage.baseUrl + (chats.image ?? ""))
+                              : ImageStorage.defaultImage,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              for (var i = 0; i < widget.listImage.length; i++)
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      if (i != 0) const SizedBox(width: 3),
-                                      Expanded(
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(100),
-                                          child: TweenAnimationBuilder<double>(
-                                            tween: Tween(
-                                                begin: 0,
-                                                end: i == index ? 1 : 0),
-                                            duration: Duration(
-                                                seconds: i == index ? 5 : 0),
-                                            curve: Curves.linear,
-                                            onEnd: () {
-                                              if (i == lastIndex &&
-                                                  index == lastIndex) {
-                                                pageBack();
-                                              } else if (i == index &&
-                                                  i != lastIndex) {
-                                                setState(() {
-                                                  index++;
-                                                });
-                                              }
-                                            },
-                                            builder: (BuildContext context,
-                                                double value, Widget? child) {
-                                              return LinearProgressIndicator(
-                                                minHeight: 3,
-                                                value: index > i ? 1 : value,
-                                                backgroundColor:
-                                                    Colors.grey.shade300,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .primary,
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: CustomText(
+                                      text: chats.name ?? "-",
+                                      fontWeight: FontWeight.w700,
+                                      overflow: TextOverflow.clip,
+                                      color:
+                                          isDark ? Colors.white : Colors.black,
+                                    ),
                                   ),
-                                ),
+                                  CustomText(
+                                    text: DateFormat("HH.mm").format(
+                                        DateTime.tryParse(
+                                                (chats.messages?.isNotEmpty ??
+                                                        false)
+                                                    ? (chats
+                                                            .messages
+                                                            ?.lastOrNull
+                                                            ?.timestamp ??
+                                                        "")
+                                                    : (chats.created ?? "")) ??
+                                            DateTime.now()),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                    color: isDark
+                                        ? Colors.grey.shade400
+                                        : Colors.grey.shade700,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              CustomText(
+                                text: chats.messages?.lastOrNull?.content ??
+                                    "Start a message",
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                color: isDark
+                                    ? Colors.grey.shade400
+                                    : Colors.grey.shade700,
+                              ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const CustomText(
-                              text: "Story ChatAI",
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            const Spacer(),
-                            InkWell(
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-
-                                pageBack();
-                              },
-                              child: const Icon(
-                                Icons.close,
-                              ),
-                            )
-                          ],
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: GestureDetector(
-                      onTapUp: (details) {
-                        HapticFeedback.lightImpact();
-
-                        if (details.localPosition.dx <
-                            ((screenWidth > 600
-                                    ? (screenWidth /
-                                        ((screenWidth > 1028) ? 3 : 4))
-                                    : screenWidth) /
-                                2)) {
-                          if (index > 0) {
-                            setState(() {
-                              index--;
-                            });
-                          }
-                        } else {
-                          if (index < lastIndex) {
-                            setState(() {
-                              index++;
-                            });
-                          } else if (index == lastIndex) {
-                            pageBack();
-                          }
-                        }
-                      },
-                      onVerticalDragEnd: (details) {
-                        pageBack();
-                      },
-                      child: Hero(
-                        tag: ImageStorage.getImageByIndex(
-                            widget.listImage[index]),
-                        child: customCachedImage(
-                            width: screenWidth,
-                            url: ImageStorage.getImageByIndex(
-                                widget.listImage[index]),
-                            radius:
-                                20 + MediaQuery.viewPaddingOf(context).bottom,
-                            isRectangle: true),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                      height: MediaQuery.viewPaddingOf(context).bottom + 10),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+                );
+        });
   }
 }

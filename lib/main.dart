@@ -58,12 +58,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void initSplash() async {
     await UserRepo.getImageDrive();
+    await UserRepo.getVideoDrive();
 
     if (await getSharedBool("initial") ?? false) {
       pageOpenAndRemovePrevious(const DifferentOfWebScreen());
     } else {
       setState(() {
-        list = generateUniqueRandomNumbers(5, 0);
+        list = generateUniqueRandomNumbers(5, 0, ImageStorage.listImage.length);
         isLoading = false;
       });
 
