@@ -105,6 +105,7 @@ class _FullScreenVideoState extends State<FullScreenVideo> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        centerTitle: true,
         title: const CustomText(
           text: "Short Video",
           color: Colors.white,
@@ -136,10 +137,6 @@ class _FullScreenVideoState extends State<FullScreenVideo> {
           SliderVideo(
               controller: widget.controller,
               builder: (context, position, duration, child) {
-                if (position == duration && !onSeek) {
-                  widget.controller.play();
-                }
-
                 return SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     activeTrackColor:
@@ -149,7 +146,7 @@ class _FullScreenVideoState extends State<FullScreenVideo> {
                     trackHeight: onSeek ? 7 : 3,
                     thumbColor: Theme.of(context).colorScheme.primary,
                     thumbShape: RoundSliderThumbShape(
-                        enabledThumbRadius: onSeek ? 7 : 2),
+                        enabledThumbRadius: onSeek ? 7 : 3),
                     overlayColor:
                         Theme.of(context).colorScheme.primary.withAlpha(32),
                     overlayShape:

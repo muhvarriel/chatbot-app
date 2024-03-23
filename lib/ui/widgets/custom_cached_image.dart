@@ -4,13 +4,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-Widget customCachedImage(
-    {required String url,
-    double? width,
-    double? height,
-    bool? isRectangle,
-    bool? withBorder,
-    double? radius}) {
+Widget customCachedImage({
+  required String url,
+  double? width,
+  double? height,
+  bool? isRectangle,
+  bool? withBorder,
+  double? radius,
+  bool? isDrive = true,
+  bool? isBlack,
+}) {
   return kIsWeb
       ? AnimatedContainer(
           duration: const Duration(milliseconds: 100),
@@ -51,6 +54,9 @@ Widget customCachedImage(
                   : null,
               image: DecorationImage(
                 image: imageProvider,
+                colorFilter: (isBlack ?? false)
+                    ? const ColorFilter.mode(Colors.black45, BlendMode.multiply)
+                    : null,
                 fit: BoxFit.cover,
               ),
             ),
@@ -72,7 +78,8 @@ Widget customCachedImage(
                         width: 3.5)
                     : null,
                 image: DecorationImage(
-                  image: NetworkImage("$url=w100-h100-p-k-rw-v1-nu-iv1"),
+                  image: NetworkImage(
+                      "$url${(isDrive ?? false) ? "=w100-h100-p-k-rw-v1-nu-iv1" : ""}"),
                   fit: BoxFit.cover,
                 ),
               ),

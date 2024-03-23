@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:chatbot_app/model/chat_room.dart';
+import 'package:chatbot_app/ui/chat_music_screen.dart';
 import 'package:chatbot_app/ui/chat_room_screen.dart';
 import 'package:chatbot_app/ui/chat_story_screen.dart';
 import 'package:chatbot_app/ui/chat_video_screen.dart';
@@ -8,10 +11,12 @@ import 'package:chatbot_app/ui/widgets/custom_text.dart';
 import 'package:chatbot_app/utils/app_navigators.dart';
 import 'package:chatbot_app/repository/chat_provider.dart';
 import 'package:chatbot_app/utils/image_storage.dart';
+import 'package:chatbot_app/utils/music_storage.dart';
 import 'package:chatbot_app/utils/video_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -36,6 +41,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
   List<int> list = [];
   List<int> listVideo = [];
+  List<int> listMusic = [];
 
   @override
   void initState() {
@@ -50,8 +56,9 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
     setState(() {
       list = generateUniqueRandomNumbers(8, 0, ImageStorage.listImage.length);
-      listVideo =
-          generateUniqueRandomNumbers(4, 0, VideoStorage.listVideo.length);
+      //listVideo = generateUniqueRandomNumbers(4, 0, VideoStorage.listVideo.length);
+      listMusic =
+          generateUniqueRandomNumbers(4, 0, MusicStorage.listMusic.length);
     });
   }
 
@@ -201,273 +208,242 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                   setState(() {});
                   return true;
                 },
-                child: scrollBar(
-                  child: ListView(
-                    shrinkWrap: true,
-                    controller: _scrollController,
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 8),
-                            Container(
-                              decoration: BoxDecoration(
-                                  color: Theme.of(context).cardColor,
-                                  borderRadius: BorderRadius.circular(15)),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              child: CupertinoTextField(
-                                controller: _searchEditingController,
-                                placeholderStyle: GoogleFonts.mulish(
-                                    fontSize: 16,
-                                    color: isDark
-                                        ? Colors.grey.shade400
-                                        : Colors.grey.shade700),
-                                placeholder: "Search for name or message",
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).cardColor,
-                                ),
-                                style: GoogleFonts.mulish(
-                                    fontSize: 16,
-                                    color: isDark
-                                        ? Colors.grey.shade300
-                                        : Colors.grey.shade900),
-                                keyboardType: TextInputType.text,
-                                textInputAction: TextInputAction.search,
-                                onChanged: (value) async {
-                                  setState(() {});
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                        ),
-                      ),
-                      const CustomText(
-                        text: "Stories",
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        padding: EdgeInsets.only(left: 16),
-                      ),
-                      const SizedBox(height: 6),
-                      SizedBox(
-                        height: 80,
-                        child: ListView.builder(
-                            itemCount: list.length,
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              return Padding(
-                                padding: EdgeInsets.only(
-                                    left: index == 0 ? 16 : 0, right: 16),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    HapticFeedback.lightImpact();
-
-                                    pageOpen(ChatStoryScreen(
-                                        index: index, listImage: list));
-                                  },
-                                  child: _buildStory(index),
-                                ),
-                              );
-                            }),
-                      ),
-                      const SizedBox(height: 16),
-                      const CustomText(
-                        text: "Short Videos",
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        padding: EdgeInsets.only(left: 16),
-                      ),
-                      const SizedBox(height: 6),
-                      SizedBox(
-                        height: 192,
-                        child: ListView.builder(
-                            itemCount: listVideo.length,
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              Widget videoWidget = VideoWidget(
-                                  url: VideoStorage.getVideoByIndex(
-                                      listVideo[index]));
-
-                              return Padding(
-                                padding: EdgeInsets.only(
-                                    left: index == 0 ? 16 : 0, right: 16),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Container(
-                                      width: 108,
-                                      height: 192,
-                                      color: Theme.of(context).cardColor,
-                                      child: videoWidget),
-                                ),
-                              );
-                            }),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                child: ListView(
+                  shrinkWrap: true,
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
                         children: [
-                          const SizedBox(height: 16),
-                          const CustomText(
-                            text: "Messages",
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            padding: EdgeInsets.only(left: 16),
+                          const SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                                color: Theme.of(context).cardColor,
+                                borderRadius: BorderRadius.circular(15)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            child: CupertinoTextField(
+                              controller: _searchEditingController,
+                              placeholderStyle: GoogleFonts.mulish(
+                                  fontSize: 16,
+                                  color: isDark
+                                      ? Colors.grey.shade400
+                                      : Colors.grey.shade700),
+                              placeholder: "Search for name or message",
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).cardColor,
+                              ),
+                              style: GoogleFonts.mulish(
+                                  fontSize: 16,
+                                  color: isDark
+                                      ? Colors.grey.shade300
+                                      : Colors.grey.shade900),
+                              keyboardType: TextInputType.text,
+                              textInputAction: TextInputAction.search,
+                              onChanged: (value) async {
+                                setState(() {});
+                              },
+                            ),
                           ),
-                          const SizedBox(height: 6),
-                          filteredChatRoom.isEmpty
-                              ? Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical:
-                                          MediaQuery.sizeOf(context).height /
-                                              6),
-                                  child: Center(
-                                      child: _searchEditingController
-                                              .text.isNotEmpty
-                                          ? const CustomText(
-                                              text: "No results found",
-                                              fontWeight: FontWeight.bold,
-                                            )
-                                          : Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 40),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: [
-                                                  const CustomText(
-                                                    text:
-                                                        "Looks like you haven't sent any messages yet",
-                                                    fontWeight: FontWeight.w800,
-                                                    textAlign: TextAlign.center,
-                                                    fontSize: 22,
-                                                  ),
-                                                  const SizedBox(height: 10),
-                                                  const CustomText(
-                                                    text:
-                                                        "We can suggest conversation starters based on your interests and preferences. Just let us know if you need some inspiration!",
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 14,
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                  const SizedBox(height: 30),
-                                                  GestureDetector(
-                                                    onTap: () async {
-                                                      HapticFeedback
-                                                          .lightImpact();
-
-                                                      if (isCreate) {
-                                                        return;
-                                                      }
-
-                                                      setState(() {
-                                                        isStart = true;
-                                                      });
-
-                                                      await Future.delayed(
-                                                          const Duration(
-                                                              seconds: 2));
-
-                                                      await createMessage(
-                                                          screenWidth);
-
-                                                      setState(() {
-                                                        isStart = false;
-                                                      });
-                                                    },
-                                                    child: AnimatedContainer(
-                                                      duration: const Duration(
-                                                          milliseconds: 1000),
-                                                      curve: Curves.elasticOut,
-                                                      width: isStart
-                                                          ? 47.5
-                                                          : 117.5,
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          vertical: 10,
-                                                          horizontal: 14),
-                                                      decoration: BoxDecoration(
-                                                        color:
-                                                            Colors.deepPurple,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(100),
-                                                      ),
-                                                      child: isStart
-                                                          ? SizedBox(
-                                                              width: 20,
-                                                              height: 20,
-                                                              child:
-                                                                  CircularProgressIndicator(
-                                                                color: Theme.of(
-                                                                        context)
-                                                                    .colorScheme
-                                                                    .primary,
-                                                              ))
-                                                          : CustomText(
-                                                              text:
-                                                                  "Start a chat",
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              fontSize: 14,
-                                                              color: Colors.grey
-                                                                  .shade100,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                      right: 8),
-                                                            ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            )),
-                                )
-                              : ListView.separated(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  padding: EdgeInsets.zero,
-                                  itemCount: filteredChatRoom.length,
-                                  separatorBuilder: (context, index) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      child: Divider(
-                                        height: 0,
-                                        indent: 0,
-                                        thickness: 1,
-                                        color: Colors.grey.withOpacity(0.2),
-                                      ),
-                                    );
-                                  },
-                                  itemBuilder: (context, index) {
-                                    var chats = filteredChatRoom[index];
-
-                                    return _buildChat(chats);
-                                  },
-                                ),
+                          const SizedBox(height: 16),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
+                    ),
+                    _storiesSection(),
+                    //_videoSection(),
+                    _musicSection(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const CustomText(
+                          text: "Messages",
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          padding: EdgeInsets.only(left: 16),
+                        ),
+                        const SizedBox(height: 6),
+                        filteredChatRoom.isEmpty
+                            ? Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical:
+                                        MediaQuery.sizeOf(context).height / 6),
+                                child: Center(
+                                    child: _searchEditingController
+                                            .text.isNotEmpty
+                                        ? const CustomText(
+                                            text: "No results found",
+                                            fontWeight: FontWeight.bold,
+                                          )
+                                        : Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 40),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                const CustomText(
+                                                  text:
+                                                      "Looks like you haven't sent any messages yet",
+                                                  fontWeight: FontWeight.w800,
+                                                  textAlign: TextAlign.center,
+                                                  fontSize: 22,
+                                                ),
+                                                const SizedBox(height: 10),
+                                                const CustomText(
+                                                  text:
+                                                      "We can suggest conversation starters based on your interests and preferences. Just let us know if you need some inspiration!",
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(height: 30),
+                                                GestureDetector(
+                                                  onTap: () async {
+                                                    HapticFeedback
+                                                        .lightImpact();
+
+                                                    if (isCreate) {
+                                                      return;
+                                                    }
+
+                                                    setState(() {
+                                                      isStart = true;
+                                                    });
+
+                                                    await Future.delayed(
+                                                        const Duration(
+                                                            seconds: 2));
+
+                                                    await createMessage(
+                                                        screenWidth);
+
+                                                    setState(() {
+                                                      isStart = false;
+                                                    });
+                                                  },
+                                                  child: AnimatedContainer(
+                                                    duration: const Duration(
+                                                        milliseconds: 1000),
+                                                    curve: Curves.elasticOut,
+                                                    width:
+                                                        isStart ? 47.5 : 117.5,
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 10,
+                                                        horizontal: 14),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.deepPurple,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              100),
+                                                    ),
+                                                    child: isStart
+                                                        ? SizedBox(
+                                                            width: 20,
+                                                            height: 20,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                            ))
+                                                        : CustomText(
+                                                            text:
+                                                                "Start a chat",
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            fontSize: 14,
+                                                            color: Colors
+                                                                .grey.shade100,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            textAlign: TextAlign
+                                                                .center,
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    right: 8),
+                                                          ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          )),
+                              )
+                            : ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: EdgeInsets.zero,
+                                itemCount: filteredChatRoom.length,
+                                separatorBuilder: (context, index) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: Divider(
+                                      height: 0,
+                                      indent: 0,
+                                      thickness: 1,
+                                      color: Colors.grey.withOpacity(0.2),
+                                    ),
+                                  );
+                                },
+                                itemBuilder: (context, index) {
+                                  var chats = filteredChatRoom[index];
+
+                                  return _buildChat(chats);
+                                },
+                              ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
               ),
             ),
           ],
         ));
+  }
+
+  Widget _storiesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const CustomText(
+          text: "Stories",
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          padding: EdgeInsets.only(left: 16),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          height: 72,
+          child: ListView.builder(
+              itemCount: list.length,
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding:
+                      EdgeInsets.only(left: index == 0 ? 16 : 0, right: 16),
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+
+                      pageOpen(ChatStoryScreen(index: index, listImage: list));
+                    },
+                    child: _buildStory(index),
+                  ),
+                );
+              }),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
   }
 
   Widget _buildStory(int index) {
@@ -479,6 +455,45 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         withBorder: true,
         url: ImageStorage.getImageByIndex(list[index]),
       ),
+    );
+  }
+
+  Widget _videoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const CustomText(
+          text: "Short Videos",
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          padding: EdgeInsets.only(left: 16),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          height: 192,
+          child: ListView.builder(
+              itemCount: listVideo.length,
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding:
+                      EdgeInsets.only(left: index == 0 ? 16 : 0, right: 16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                        width: 108,
+                        height: 192,
+                        color: Theme.of(context).cardColor,
+                        child: VideoWidget(
+                            url: VideoStorage.getVideoByIndex(
+                                listVideo[index]))),
+                  ),
+                );
+              }),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
@@ -632,5 +647,94 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                   ),
                 );
         });
+  }
+
+  Widget _musicSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const CustomText(
+          text: "Music",
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          padding: EdgeInsets.only(left: 16),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          height: 200,
+          child: ListView.builder(
+              itemCount: listMusic.length,
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                var artist = MusicStorage.getMusicByIndex(listMusic[index]);
+
+                return Padding(
+                  padding:
+                      EdgeInsets.only(left: index == 0 ? 16 : 0, right: 16),
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+
+                      pageOpen(ChatMusicScreen(artist: artist));
+                    },
+                    child: Hero(
+                      tag: artist.images?.firstOrNull?.url ?? "",
+                      child: Stack(
+                        alignment: Alignment.bottomCenter,
+                        children: [
+                          customCachedImage(
+                            width: 175,
+                            height: 200,
+                            radius: 20,
+                            isRectangle: true,
+                            url: artist.images?.firstOrNull?.url ?? "",
+                            isDrive: false,
+                          ),
+                          ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20)),
+                            child: BackdropFilter(
+                              filter:
+                                  ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                              child: Container(
+                                width: 175,
+                                height: 57,
+                                padding: const EdgeInsets.all(10),
+                                color: Colors.grey.shade800.withOpacity(0.5),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CustomText(
+                                      text: artist.name ?? "",
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                    CustomText(
+                                      text:
+                                          "${NumberFormat("#,##0", "en_US").format(artist.followers?.total ?? 0)} monthly listeners",
+                                      overflow: TextOverflow.ellipsis,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
   }
 }

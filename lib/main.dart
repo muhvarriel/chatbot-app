@@ -1,3 +1,4 @@
+import 'package:chatbot_app/repository/music_repo.dart';
 import 'package:chatbot_app/repository/user_repo.dart';
 import 'package:chatbot_app/ui/chat_home_screen.dart';
 import 'package:chatbot_app/ui/chat_room_screen.dart';
@@ -58,7 +59,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void initSplash() async {
     await UserRepo.getImageDrive();
-    await UserRepo.getVideoDrive();
+    //await UserRepo.getVideoDrive();
+    await MusicRepo.musicLoaded();
 
     if (await getSharedBool("initial") ?? false) {
       pageOpenAndRemovePrevious(const DifferentOfWebScreen());

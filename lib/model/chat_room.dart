@@ -1,3 +1,5 @@
+import 'package:chatbot_app/model/track.dart';
+
 class ChatRoom {
   String? id;
   String? name;
@@ -88,14 +90,16 @@ class Messages {
   Sender? sender;
   String? timestamp;
   String? content;
+  Tracks? tracks;
 
-  Messages({this.id, this.sender, this.timestamp, this.content});
+  Messages({this.id, this.sender, this.timestamp, this.content, this.tracks});
 
   Messages.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     sender = json['sender'] != null ? Sender.fromJson(json['sender']) : null;
     timestamp = json['timestamp'];
     content = json['content'];
+    tracks = json['tracks'] != null ? Tracks.fromJson(json['tracks']) : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -106,6 +110,9 @@ class Messages {
     }
     data['timestamp'] = timestamp;
     data['content'] = content;
+    if (tracks != null) {
+      data['tracks'] = tracks!.toJson();
+    }
     return data;
   }
 }

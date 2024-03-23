@@ -1,6 +1,8 @@
-
 import 'package:chatbot_app/model/chat_room.dart';
+import 'package:chatbot_app/model/track.dart';
+import 'package:chatbot_app/repository/music_repo.dart';
 import 'package:chatbot_app/repository/user_repo.dart';
+import 'package:chatbot_app/ui/chat_music_screen.dart';
 import 'package:chatbot_app/ui/widgets/custom_cached_image.dart';
 import 'package:chatbot_app/ui/widgets/custom_text.dart';
 import 'package:chatbot_app/utils/app_navigators.dart';
@@ -11,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 
 class ChatRoomScreen extends StatefulWidget {
@@ -33,10 +36,19 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   late ChatProvider chatProvider;
 
+  final player = AudioPlayer();
+  String? idPlayer;
+
   @override
   void initState() {
     chatProvider = Provider.of<ChatProvider>(context, listen: false);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    player.dispose();
   }
 
   @override
@@ -205,14 +217,59 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                                   topRight:
                                                       const Radius.circular(
                                                           20))),
-                                          child: CustomText(
-                                            text: messages.content ?? "",
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                            color: isDark
-                                                ? Colors.white
-                                                : Colors.black,
-                                            overflow: TextOverflow.clip,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (messages.tracks != null)
+                                                Material(
+                                                  color: Colors.transparent,
+                                                  child: Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 10),
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                            bottom: 10),
+                                                    decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(20),
+                                                        color: Theme.of(context)
+                                                            .cardColor),
+                                                    child: TrackPreview(
+                                                      tracks: messages.tracks ??
+                                                          Tracks(),
+                                                      player: player,
+                                                      idPlayer: idPlayer,
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          vertical: 10),
+                                                      onTap: () {
+                                                        setState(() {
+                                                          idPlayer = messages
+                                                              .tracks?.id;
+                                                        });
+                                                      },
+                                                      onEnd: () {
+                                                        setState(() {
+                                                          idPlayer = null;
+                                                        });
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
+                                              CustomText(
+                                                text: messages.content ?? "",
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                                color: isDark
+                                                    ? Colors.white
+                                                    : Colors.black,
+                                                overflow: TextOverflow.clip,
+                                              ),
+                                            ],
                                           ),
                                         );
                                       },
@@ -313,6 +370,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     if (_textEditingController.text.isNotEmpty && !isTyping) {
       String text = _textEditingController.text;
       int idText = chatRoom.messages?.length ?? 0;
+      Tracks? searchTrack;
+      String? content;
 
       setState(() {
         _textEditingController.clear();
@@ -338,34 +397,41 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         });
       }
 
-      await UserRepo.sendText(
-              text: text,
-              history: chatRoom.messages?.where((e) => e.id != idText).toList())
-          .then((value) async {
-        if (value != null) {
-          setState(() {
-            chatRoom.messages?.add(Messages(
-              id: chatRoom.messages?.length,
-              sender: Sender(
-                id: 1,
-                username: chatRoom.name ?? "ChatBot",
-              ),
-              timestamp: DateTime.now().toString(),
-              content: value,
-            ));
-            isTyping = false;
-          });
+      if (text.contains("song") || text.contains("music")) {
+        await MusicRepo.searchTrack(text).then((value) {
+          if (value[0] == 200) {
+            TracksResponse result = value[1];
 
-          Future.delayed(const Duration(milliseconds: 100)).then((value) {
-            _scrollController.animateTo(
-                _scrollController.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeIn);
-          });
+            searchTrack = result.items?.firstOrNull;
+          }
+        });
+      }
 
-          await chatProvider.updateChat(chatRoom);
-        }
+      content = await UserRepo.sendText(
+          text: text,
+          history: chatRoom.messages?.where((e) => e.id != idText).toList());
+
+      chatRoom.messages?.add(Messages(
+        id: chatRoom.messages?.length,
+        sender: Sender(
+          id: 1,
+          username: chatRoom.name ?? "ChatBot",
+        ),
+        timestamp: DateTime.now().toString(),
+        content: content ?? "Well this is $text",
+        tracks: searchTrack,
+      ));
+
+      setState(() {
+        isTyping = false;
       });
+
+      Future.delayed(const Duration(milliseconds: 100)).then((value) {
+        _scrollController.animateTo(_scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+      });
+
+      await chatProvider.updateChat(chatRoom);
     }
   }
 }
