@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:ui';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:chatbot_app/model/artist.dart';
 import 'package:chatbot_app/model/artist_album.dart';
 import 'package:chatbot_app/model/track.dart';
@@ -10,14 +11,9 @@ import 'package:chatbot_app/ui/widgets/custom_back_button.dart';
 import 'package:chatbot_app/ui/widgets/custom_cached_image.dart';
 import 'package:chatbot_app/ui/widgets/custom_text.dart';
 import 'package:chatbot_app/utils/app_navigators.dart';
-import 'package:chatbot_app/utils/music_storage.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:just_audio/just_audio.dart';
 
 class ChatMusicScreen extends StatefulWidget {
   final Artist artist;
@@ -361,15 +357,21 @@ class TrackPreview extends StatefulWidget {
 }
 
 class _TrackPreviewState extends State<TrackPreview> {
+  Duration? _duration;
+  Duration? _position;
+
   @override
   Widget build(BuildContext context) {
-    widget.player.playerStateStream.listen((event) async {
-      if (event.playing && mounted) {
-        setState(() {});
+    widget.player.onPlayerStateChanged.listen((event) {
+      if (event == PlayerState.completed) {
+        widget.onEnd();
+      }
+    });
 
-        if (event.processingState == ProcessingState.completed) {
-          await widget.player.stop();
-          widget.onEnd();
+    widget.player.onPositionChanged.listen((event) {
+      if (mounted) {
+        if (event != _duration) {
+          setState(() => _position = event);
         }
       }
     });
@@ -380,17 +382,17 @@ class _TrackPreviewState extends State<TrackPreview> {
 
         if (widget.tracks.previewUrl != null) {
           if (widget.idPlayer == widget.tracks.id) {
-            if (widget.player.playing) {
+            if (widget.player.state == PlayerState.playing) {
               await widget.player.pause();
             } else {
-              await widget.player.play();
+              await widget.player.resume();
             }
           } else {
             widget.onTap();
 
-            await widget.player
-                .setUrl(widget.tracks.previewUrl ?? 'https://foo.com/bar.mp3');
-            await widget.player.play();
+            await widget.player.play(UrlSource(
+                widget.tracks.previewUrl ?? 'https://foo.com/bar.mp3'));
+            widget.player.getDuration().then((value) => _duration = value);
           }
         }
       },
@@ -419,14 +421,12 @@ class _TrackPreviewState extends State<TrackPreview> {
                           padding: const EdgeInsets.all(14),
                           child: CircularProgressIndicator(
                             color: Colors.white,
-                            value: widget.player.playerState.processingState ==
-                                    ProcessingState.buffering
-                                ? null
-                                : (widget.player.position.inMilliseconds /
-                                        (widget.player.duration
-                                                ?.inMilliseconds ??
-                                            1))
-                                    .clamp(0, 1),
+                            value: widget.player.state == PlayerState.playing ||
+                                    widget.player.state == PlayerState.paused
+                                ? ((_position?.inMilliseconds ?? 1) /
+                                        (_duration?.inMilliseconds ?? 1))
+                                    .clamp(0, 1)
+                                : null,
                           )))
               ],
             ),

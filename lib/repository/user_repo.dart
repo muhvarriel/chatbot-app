@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:chatbot_app/model/artist.dart';
 import 'package:chatbot_app/model/chat_room.dart';
 import 'package:chatbot_app/utils/constants.dart';
 import 'package:chatbot_app/utils/image_storage.dart';
-import 'package:chatbot_app/utils/music_storage.dart';
 import 'package:chatbot_app/utils/video_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
