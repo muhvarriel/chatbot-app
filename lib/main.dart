@@ -58,6 +58,11 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void initSplash() async {
+    await ImageStorage.loadImage();
+    if (ImageStorage.listImage.isEmpty) {
+      await UserRepo.getImageDrive();
+    }
+
     if (await getSharedBool("initial") ?? false) {
       pageOpenAndRemovePrevious(const DifferentOfWebScreen());
     } else {

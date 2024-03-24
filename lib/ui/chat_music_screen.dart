@@ -621,6 +621,8 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
                         ],
                       ),
                     ),
+                    SizedBox(
+                        height: 16 + MediaQuery.viewPaddingOf(context).bottom),
                   ],
                 ),
               ),

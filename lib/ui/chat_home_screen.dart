@@ -54,7 +54,6 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
     await chatProvider.loadChatsFromString();
 
-    await ImageStorage.loadImage();
     setState(() {
       list = generateUniqueRandomNumbers(8, 0, ImageStorage.listImage.length);
     });
