@@ -4,6 +4,7 @@ import 'package:chatbot_app/model/artist.dart';
 import 'package:chatbot_app/model/artist_album.dart';
 import 'package:chatbot_app/model/track.dart';
 import 'package:chatbot_app/services/network_service.dart';
+import 'package:chatbot_app/utils/app_navigators.dart';
 import 'package:chatbot_app/utils/music_storage.dart';
 import 'package:chatbot_app/utils/shared_helpers.dart';
 import 'package:dio/dio.dart';
@@ -38,15 +39,30 @@ class MusicRepo {
 
   static Future<void> musicLoaded() async {
     List<Artist> listArtist = [];
-    do {
-      await getArtists("41MozSoPIsD1dJM0CLPjZF").then((value) async {
-        if (value[0] == 200) {
-          listArtist = value[1];
-        } else {
-          await generateToken();
-        }
-      });
-    } while (listArtist.isEmpty);
+    List<String> list = [
+      "41MozSoPIsD1dJM0CLPjZF",
+      "66CXWjxzNUsdJxJ2JdwvnR",
+      "0kPb52ySN2k9P6wEZPTUzm"
+    ];
+
+    for (var i = 0; i < list.length; i++) {
+      List<Artist> temp = [];
+      do {
+        await getArtists(list[i]).then((value) async {
+          if (value[0] == 200) {
+            temp = value[1];
+          } else {
+            await generateToken();
+          }
+        });
+      } while (temp.isEmpty);
+
+      List<int> randomIndex = generateUniqueRandomNumbers(2, 0, temp.length);
+
+      for (var j = 0; j < randomIndex.length; j++) {
+        listArtist.add(temp[randomIndex[j]]);
+      }
+    }
 
     MusicStorage.listMusic = listArtist;
   }
@@ -116,6 +132,21 @@ class MusicRepo {
       TracksResponse tracks = TracksResponse.fromJson(response.data);
 
       return [response.statusCode, tracks];
+    } on DioException catch (e) {
+      print('error $e');
+      return [e.response?.statusCode ?? 500, null];
+    }
+  }
+
+  static Future<dynamic> getAvailableGenre() async {
+    try {
+      final response = await _dio.get("recommendations/available-genre-seeds");
+
+      log("getAvailableGenre: $response");
+
+      List<String> genres = response.data['genres'].cast<String>();
+
+      return [response.statusCode, genres];
     } on DioException catch (e) {
       print('error $e');
       return [e.response?.statusCode ?? 500, null];

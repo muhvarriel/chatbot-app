@@ -41,7 +41,6 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
   List<int> list = [];
   List<int> listVideo = [];
-  List<int> listMusic = [];
 
   @override
   void initState() {
@@ -59,10 +58,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     });
 
     await MusicRepo.musicLoaded();
-    setState(() {
-      listMusic =
-          generateUniqueRandomNumbers(4, 0, MusicStorage.listMusic.length);
-    });
+    setState(() {});
 
     /*
     await UserRepo.getVideoDrive();
@@ -676,11 +672,11 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         SizedBox(
           height: 200,
           child: ListView.builder(
-              itemCount: listMusic.length,
+              itemCount: MusicStorage.listMusic.length,
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
-                var artist = MusicStorage.getMusicByIndex(listMusic[index]);
+                var artist = MusicStorage.listMusic[index];
 
                 return Padding(
                   padding:

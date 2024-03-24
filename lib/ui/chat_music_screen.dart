@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:ui';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -478,7 +477,7 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
                   if (aboutAlbum == null) {
                     UserRepo.generateContent(
                             text:
-                                "Tell me about album ${selectedAlbum?.name ?? ""} by ${selectedAlbum?.artists?.map((e) => e.name).toList().join(", ") ?? ""}, for more information genre is ${widget.artist.genres?.join(", ") ?? ""} and music is ${selectedAlbumTrack.map((e) => e.name).toList().join(", ")} release on ${formatDate("d MMMM y", date: selectedAlbum?.releaseDate)} in one paragraph so user can easy to read it")
+                                "Tell me about album ${selectedAlbum?.name ?? ""} by ${selectedAlbum?.artists?.map((e) => e.name).toList().join(", ") ?? ""}, for more information genre is ${widget.artist.genres?.join(", ") ?? ""} and music is ${selectedAlbumTrack.map((e) => "${e.name ?? ""} by ${e.artists?.map((r) => r.name).toList().join(", ") ?? ""}").toList().join(", ")} release on ${formatDate("d MMMM y", date: selectedAlbum?.releaseDate)} in one paragraph so user can easy to read it")
                         .then((valueAbout) {
                       if (mounted) {
                         setState(() {
@@ -496,7 +495,7 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
 
             return NotificationListener(
               onNotification: (notification) {
-                if (controller.offset < -150 && isOpen) {
+                if (controller.offset < -125 && isOpen) {
                   isOpen = false;
                   pageBack();
                 }
