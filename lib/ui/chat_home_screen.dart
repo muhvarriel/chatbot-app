@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:chatbot_app/model/chat_room.dart';
+import 'package:chatbot_app/repository/music_repo.dart';
+import 'package:chatbot_app/repository/user_repo.dart';
 import 'package:chatbot_app/ui/chat_music_screen.dart';
 import 'package:chatbot_app/ui/chat_room_screen.dart';
 import 'package:chatbot_app/ui/chat_story_screen.dart';
@@ -52,12 +54,26 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
     await chatProvider.loadChatsFromString();
 
+    await ImageStorage.loadImage();
     setState(() {
       list = generateUniqueRandomNumbers(8, 0, ImageStorage.listImage.length);
-      //listVideo = generateUniqueRandomNumbers(4, 0, VideoStorage.listVideo.length);
+    });
+
+    await MusicRepo.musicLoaded();
+    setState(() {
       listMusic =
           generateUniqueRandomNumbers(4, 0, MusicStorage.listMusic.length);
     });
+
+    /*
+    await UserRepo.getVideoDrive();
+    setState(() {
+      listVideo =
+          generateUniqueRandomNumbers(4, 0, VideoStorage.listVideo.length);
+    });
+    */
+
+    await UserRepo.getImageDrive();
   }
 
   Future<void> createMessage(double screenWidth) async {
@@ -698,7 +714,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                   ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
                               child: Container(
                                 width: 175,
-                                height: 57,
+                                height: 60,
                                 padding: const EdgeInsets.all(10),
                                 color: Colors.grey.shade800.withOpacity(0.5),
                                 child: Column(
@@ -707,6 +723,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                   children: [
                                     CustomText(
                                       text: artist.name ?? "",
+                                      overflow: TextOverflow.ellipsis,
                                       fontSize: 14,
                                       fontWeight: FontWeight.w800,
                                       color: Colors.white,

@@ -58,10 +58,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void initSplash() async {
-    await UserRepo.getImageDrive();
-    //await UserRepo.getVideoDrive();
-    await MusicRepo.musicLoaded();
-
     if (await getSharedBool("initial") ?? false) {
       pageOpenAndRemovePrevious(const DifferentOfWebScreen());
     } else {

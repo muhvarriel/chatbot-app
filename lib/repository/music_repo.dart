@@ -39,7 +39,7 @@ class MusicRepo {
   static Future<void> musicLoaded() async {
     List<Artist> listArtist = [];
     do {
-      await getArtists("7n2Ycct7Beij7Dj7meI4X0").then((value) async {
+      await getArtists("41MozSoPIsD1dJM0CLPjZF").then((value) async {
         if (value[0] == 200) {
           listArtist = value[1];
         } else {
@@ -101,6 +101,19 @@ class MusicRepo {
       log("searchTrack: $response");
 
       TracksResponse tracks = TracksResponse.fromJson(response.data['tracks']);
+
+      return [response.statusCode, tracks];
+    } on DioException catch (e) {
+      print('error $e');
+      return [e.response?.statusCode ?? 500, null];
+    }
+  }
+
+  static Future<dynamic> getAlbumTrack(String id) async {
+    try {
+      final response = await _dio.get("albums/$id/tracks");
+
+      TracksResponse tracks = TracksResponse.fromJson(response.data);
 
       return [response.statusCode, tracks];
     } on DioException catch (e) {

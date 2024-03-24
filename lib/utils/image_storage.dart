@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'dart:math';
+
+import 'package:chatbot_app/utils/shared_helpers.dart';
 
 class ImageStorage {
   static String baseUrl = "https://lh3.googleusercontent.com/d/";
@@ -14,5 +17,14 @@ class ImageStorage {
         indexImage < listImage.length ? indexImage : (indexImage - indexImage);
 
     return "$baseUrl${listImage[index]}";
+  }
+
+  static Future<void> saveImage(List<String> images) async {
+    listImage = images;
+    await setSharedListString("ImageStorage", listImage);
+  }
+
+  static Future<void> loadImage() async {
+    listImage = await getSharedListString("ImageStorage");
   }
 }

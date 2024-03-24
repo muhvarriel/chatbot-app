@@ -30,15 +30,19 @@ String formatDate(String format, {String? date}) =>
     DateFormat(format).format(DateTime.tryParse(date ?? "") ?? DateTime.now());
 
 List<int> generateUniqueRandomNumbers(int count, int min, int max) {
-  Random random = Random();
-  List<int> randomNumbers = [];
+  if (max < count) {
+    return [];
+  } else {
+    Random random = Random();
+    List<int> randomNumbers = [];
 
-  while (randomNumbers.length < count) {
-    int randomNumber = min + random.nextInt((max - 1) - min + 1);
-    if (!randomNumbers.contains(randomNumber)) {
-      randomNumbers.add(randomNumber);
+    while (randomNumbers.length < count) {
+      int randomNumber = min + random.nextInt((max - 1) - min + 1);
+      if (!randomNumbers.contains(randomNumber)) {
+        randomNumbers.add(randomNumber);
+      }
     }
-  }
 
-  return randomNumbers;
+    return randomNumbers;
+  }
 }

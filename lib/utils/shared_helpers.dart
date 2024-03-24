@@ -48,6 +48,18 @@ Future<void> setSharedBool(String name, bool content) async {
   await prefs.setBool(name, content);
 }
 
+Future<List<String>> getSharedListString(String name) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  return prefs.getStringList(name) ?? [];
+}
+
+Future<void> setSharedListString(String name, List<String> content) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  await prefs.setStringList(name, content);
+}
+
 Future<bool> containShared(String name) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 

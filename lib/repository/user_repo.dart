@@ -97,7 +97,7 @@ class UserRepo {
       log(listImage.length.toString());
       log(end.difference(start).toString());
 
-      ImageStorage.listImage = listImage;
+      await ImageStorage.saveImage(listImage);
     } catch (e) {
       print('error $e');
     }

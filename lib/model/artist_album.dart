@@ -2,7 +2,7 @@ import 'package:chatbot_app/model/artist.dart';
 
 class ArtistAlbumResponse {
   String? href;
-  List<Items>? items;
+  List<Albums>? items;
   int? limit;
   String? next;
   int? offset;
@@ -21,9 +21,9 @@ class ArtistAlbumResponse {
   ArtistAlbumResponse.fromJson(Map<String, dynamic> json) {
     href = json['href'];
     if (json['items'] != null) {
-      items = <Items>[];
+      items = <Albums>[];
       json['items'].forEach((v) {
-        items!.add(Items.fromJson(v));
+        items!.add(Albums.fromJson(v));
       });
     }
     limit = json['limit'];
@@ -48,7 +48,7 @@ class ArtistAlbumResponse {
   }
 }
 
-class Items {
+class Albums {
   String? albumGroup;
   String? albumType;
   List<Artists>? artists;
@@ -63,7 +63,7 @@ class Items {
   String? type;
   String? uri;
 
-  Items(
+  Albums(
       {this.albumGroup,
       this.albumType,
       this.artists,
@@ -78,7 +78,7 @@ class Items {
       this.type,
       this.uri});
 
-  Items.fromJson(Map<String, dynamic> json) {
+  Albums.fromJson(Map<String, dynamic> json) {
     albumGroup = json['album_group'];
     albumType = json['album_type'];
     if (json['artists'] != null) {
