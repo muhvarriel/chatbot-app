@@ -222,53 +222,42 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                                 CrossAxisAlignment.start,
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              if (messages.tracks != null)
-                                                Material(
-                                                  color: Colors.transparent,
-                                                  child: Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 10),
-                                                    margin:
-                                                        const EdgeInsets.only(
-                                                            bottom: 10),
-                                                    decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(20),
-                                                        color: Theme.of(context)
-                                                            .cardColor),
-                                                    child: TrackPreview(
-                                                      tracks: messages.tracks ??
-                                                          Tracks(),
-                                                      player: player,
-                                                      idPlayer: idPlayer,
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          vertical: 10),
-                                                      onTap: () {
-                                                        setState(() {
-                                                          idPlayer = messages
-                                                              .tracks?.id;
-                                                        });
-                                                      },
-                                                      onEnd: () {
-                                                        setState(() {
-                                                          idPlayer = null;
-                                                        });
-                                                      },
+                                              messages.tracks != null
+                                                  ? Material(
+                                                      color: Colors.transparent,
+                                                      child: TrackPreview(
+                                                        tracks:
+                                                            messages.tracks ??
+                                                                Tracks(),
+                                                        player: player,
+                                                        idPlayer: idPlayer,
+                                                        padding:
+                                                            EdgeInsets.zero,
+                                                        onTap: () {
+                                                          setState(() {
+                                                            idPlayer = messages
+                                                                .tracks?.id;
+                                                          });
+                                                        },
+                                                        onEnd: () {
+                                                          setState(() {
+                                                            idPlayer = null;
+                                                          });
+                                                        },
+                                                      ),
+                                                    )
+                                                  : CustomText(
+                                                      text: messages.content ??
+                                                          "",
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 14,
+                                                      color: isDark
+                                                          ? Colors.white
+                                                          : Colors.black,
+                                                      overflow:
+                                                          TextOverflow.clip,
                                                     ),
-                                                  ),
-                                                ),
-                                              CustomText(
-                                                text: messages.content ?? "",
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : Colors.black,
-                                                overflow: TextOverflow.clip,
-                                              ),
                                             ],
                                           ),
                                         );
@@ -405,11 +394,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             searchTrack = result.items?.firstOrNull;
           }
         });
+      } else {
+        content = await UserRepo.sendText(
+            text: text,
+            history: chatRoom.messages?.where((e) => e.id != idText).toList());
       }
-
-      content = await UserRepo.sendText(
-          text: text,
-          history: chatRoom.messages?.where((e) => e.id != idText).toList());
 
       chatRoom.messages?.add(Messages(
         id: chatRoom.messages?.length,

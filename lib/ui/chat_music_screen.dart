@@ -527,7 +527,7 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           textAlign: TextAlign.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
                         ),
                         const SizedBox(height: 2),
                         CustomText(
