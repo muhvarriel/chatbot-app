@@ -6,6 +6,7 @@ class ChatRoom {
   String? description;
   String? image;
   String? created;
+  bool? pinned;
   List<Members>? members;
   List<Messages>? messages;
 
@@ -15,6 +16,7 @@ class ChatRoom {
       this.description,
       this.image,
       this.created,
+      this.pinned,
       this.members,
       this.messages});
 
@@ -24,6 +26,7 @@ class ChatRoom {
     description = json['description'];
     image = json['image'];
     created = json['created'];
+    pinned = json['pinned'];
     if (json['members'] != null) {
       members = <Members>[];
       json['members'].forEach((v) {
@@ -45,6 +48,7 @@ class ChatRoom {
     data['description'] = description;
     data['image'] = image;
     data['created'] = created;
+    data['pinned'] = pinned;
     if (members != null) {
       data['members'] = members!.map((v) => v.toJson()).toList();
     }

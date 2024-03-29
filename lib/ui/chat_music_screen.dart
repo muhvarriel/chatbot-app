@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:ui';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -10,9 +11,11 @@ import 'package:chatbot_app/ui/widgets/custom_back_button.dart';
 import 'package:chatbot_app/ui/widgets/custom_cached_image.dart';
 import 'package:chatbot_app/ui/widgets/custom_text.dart';
 import 'package:chatbot_app/utils/app_navigators.dart';
+import 'package:chatbot_app/utils/music_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:like_button/like_button.dart';
 
 class ChatMusicScreen extends StatefulWidget {
   final Artist artist;
@@ -27,6 +30,9 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
   ArtistAlbumResponse? _artistAlbumResponse;
   List<Tracks> listTrack = [];
   List<Artist> relatedArtist = [];
+
+  bool isSnap = false;
+  bool isAnimate = false;
 
   final ScrollController _scrollController = ScrollController();
   final DraggableScrollableController _draggableScrollableController =
@@ -43,14 +49,58 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
   void initState() {
     super.initState();
     init();
+    _scrollController.addListener(snapScroll);
   }
 
   @override
   void dispose() {
     super.dispose();
     player.dispose();
+    _scrollController.removeListener(snapScroll);
     _scrollController.dispose();
     _draggableScrollableController.dispose();
+  }
+
+  AppBar dummyAppBar = AppBar(
+    title: const CustomText(
+      text: "-",
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+    ),
+  );
+  double offset = 0;
+  double titleOffset = 0;
+  double opacityBorder = 0;
+
+  Future<void> snapScroll() async {
+    final double maxTitleOffset = 300 -
+        (dummyAppBar.preferredSize.height +
+            MediaQuery.viewPaddingOf(context).top);
+    const double snapThreshold = 10;
+
+    offset = _scrollController.hasClients ? _scrollController.offset : 0;
+    titleOffset = maxTitleOffset;
+    opacityBorder = (offset / titleOffset).clamp(0, 1);
+
+    //log(offset.toString());
+
+    if ((offset - titleOffset).abs() < snapThreshold) {
+      await _snapToPosition(titleOffset);
+    } else if ((offset - (titleOffset + 260)).abs() < snapThreshold) {
+      await _snapToPosition(titleOffset + 260);
+    } else if (!isSnap) {
+      isSnap = true;
+    }
+  }
+
+  Future<void> _snapToPosition(double targetOffset) async {
+    if (isSnap && !isAnimate) {
+      isSnap = false;
+      isAnimate = true;
+      await _scrollController.animateTo(targetOffset,
+          duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
+      isAnimate = false;
+    }
   }
 
   Future<void> init() async {
@@ -98,22 +148,6 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
 
   @override
   Widget build(BuildContext context) {
-    AppBar dummyAppBar = AppBar(
-      title: const CustomText(
-        text: "-",
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-      ),
-    );
-
-    double offset = _scrollController.hasClients ? _scrollController.offset : 0;
-
-    double opacityBorder = (offset /
-            (300 -
-                (dummyAppBar.preferredSize.height +
-                    MediaQuery.viewPaddingOf(context).top)))
-        .clamp(0, 1);
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -131,6 +165,42 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
           ),
         ),
         leading: const CustomBackButton(color: Colors.white),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: LikeButton(
+              size: 30,
+              isLiked: MusicStorage.favouriteArtist.contains(widget.artist.id),
+              circleColor: const CircleColor(
+                  start: Colors.purple, end: Colors.deepPurple),
+              bubblesColor: const BubblesColor(
+                dotPrimaryColor: Colors.purple,
+                dotSecondaryColor: Colors.deepPurple,
+              ),
+              onTap: (isLiked) async {
+                HapticFeedback.lightImpact();
+
+                if (isLiked) {
+                  await MusicStorage.removeFavourite(widget.artist.id ?? "");
+                } else {
+                  await MusicStorage.addFavourite(widget.artist.id ?? "");
+                }
+
+                log(isLiked.toString());
+                log(MusicStorage.favouriteArtist.toString());
+
+                return !isLiked;
+              },
+              likeBuilder: (isLiked) {
+                return Icon(
+                  Icons.favorite_rounded,
+                  color: isLiked ? Colors.red : Colors.white,
+                  size: 30,
+                );
+              },
+            ),
+          ),
+        ],
       ),
       body: Stack(
         alignment: Alignment.topCenter,
@@ -372,7 +442,7 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
                                   padding: EdgeInsets.only(
                                       left: index == 0 ? 16 : 0, right: 16),
                                   child: GestureDetector(
-                                    onTap: () {
+                                    onTap: () async {
                                       HapticFeedback.lightImpact();
 
                                       if (mounted) {
@@ -382,10 +452,12 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
                                         });
                                       }
 
-                                      pageOpen(ChatMusicScreen(artist: artist));
+                                      await pageOpenWithResult(
+                                          ChatMusicScreen(artist: artist));
+
+                                      setState(() {});
                                     },
                                     child: Stack(
-                                      alignment: Alignment.bottomCenter,
                                       children: [
                                         customCachedImage(
                                           width: 150,
@@ -397,29 +469,96 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
                                                   "",
                                           isDrive: false,
                                         ),
-                                        ClipRRect(
-                                          borderRadius: const BorderRadius.only(
-                                              bottomLeft: Radius.circular(25),
-                                              bottomRight: Radius.circular(25)),
-                                          child: BackdropFilter(
-                                            filter: ImageFilter.blur(
-                                                sigmaX: 10.0, sigmaY: 10.0),
-                                            child: Container(
-                                              width: 150,
-                                              height: 40,
-                                              padding: const EdgeInsets.all(10),
-                                              color: Colors.grey.shade800
-                                                  .withOpacity(0.5),
-                                              alignment: Alignment.center,
-                                              child: CustomText(
-                                                text: artist.name ?? "",
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w800,
-                                                color: Colors.white,
-                                                textAlign: TextAlign.center,
+                                        Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            MusicStorage.favouriteArtist
+                                                    .contains(artist.id)
+                                                ? SizedBox(
+                                                    width: 150,
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: [
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  right: 6,
+                                                                  top: 6),
+                                                          child: ClipRRect(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        100),
+                                                            child:
+                                                                BackdropFilter(
+                                                              filter: ImageFilter
+                                                                  .blur(
+                                                                      sigmaX:
+                                                                          10.0,
+                                                                      sigmaY:
+                                                                          10.0),
+                                                              child: Container(
+                                                                width: 35,
+                                                                height: 35,
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .fromLTRB(
+                                                                        5,
+                                                                        5,
+                                                                        5,
+                                                                        3),
+                                                                color: Colors
+                                                                    .grey
+                                                                    .shade800
+                                                                    .withOpacity(
+                                                                        0.5),
+                                                                child:
+                                                                    const Icon(
+                                                                  Icons
+                                                                      .favorite_rounded,
+                                                                  color: Colors
+                                                                      .red,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  )
+                                                : const SizedBox(),
+                                            ClipRRect(
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                      bottomLeft:
+                                                          Radius.circular(25),
+                                                      bottomRight:
+                                                          Radius.circular(25)),
+                                              child: BackdropFilter(
+                                                filter: ImageFilter.blur(
+                                                    sigmaX: 10.0, sigmaY: 10.0),
+                                                child: Container(
+                                                  width: 150,
+                                                  height: 40,
+                                                  padding:
+                                                      const EdgeInsets.all(10),
+                                                  color: Colors.grey.shade800
+                                                      .withOpacity(0.5),
+                                                  alignment: Alignment.center,
+                                                  child: CustomText(
+                                                    text: artist.name ?? "",
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Colors.white,
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
                                               ),
                                             ),
-                                          ),
+                                          ],
                                         ),
                                       ],
                                     ),

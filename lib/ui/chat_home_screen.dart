@@ -17,6 +17,7 @@ import 'package:chatbot_app/utils/video_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -107,14 +108,18 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                 false))
         .toList();
 
-    filteredChatRoom.sort((a, b) =>
-        ((b.messages?.isNotEmpty ?? false)
-                ? b.messages?.lastOrNull?.timestamp
-                : b.created)
-            ?.compareTo(((a.messages?.isNotEmpty ?? false)
-                ? (a.messages?.lastOrNull?.timestamp ?? "")
-                : (a.created ?? ""))) ??
-        0);
+    filteredChatRoom
+      ..sort((a, b) =>
+          ((b.messages?.isNotEmpty ?? false)
+                  ? b.messages?.lastOrNull?.timestamp
+                  : b.created)
+              ?.compareTo(((a.messages?.isNotEmpty ?? false)
+                  ? (a.messages?.lastOrNull?.timestamp ?? "")
+                  : (a.created ?? ""))) ??
+          0)
+      ..sort((a, b) => (b.pinned ?? false)
+          .toString()
+          .compareTo((a.pinned ?? false).toString()));
 
     double opacityBorder = _scrollController.hasClients
         ? (_scrollController.position.maxScrollExtent != 0
@@ -514,12 +519,17 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         enableHapticFeedback: true,
         actions: <Widget>[
           CupertinoContextMenuAction(
-            onPressed: () {
+            onPressed: () async {
               HapticFeedback.lightImpact();
+              await chatProvider.pinChat(chats);
               pageBack();
+
+              setState(() {});
             },
-            trailingIcon: CupertinoIcons.share,
-            child: const CustomText(text: 'Share'),
+            trailingIcon: (chats.pinned ?? false)
+                ? CupertinoIcons.pin_slash
+                : CupertinoIcons.pin,
+            child: CustomText(text: (chats.pinned ?? false) ? 'Unpin' : 'Pin'),
           ),
           CupertinoContextMenuAction(
             onPressed: () async {
@@ -637,16 +647,29 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                 ],
                               ),
                               const SizedBox(height: 3),
-                              CustomText(
-                                text: chats.messages?.lastOrNull?.content ??
-                                    "Start a message",
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                color: isDark
-                                    ? Colors.grey.shade400
-                                    : Colors.grey.shade700,
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: CustomText(
+                                      text:
+                                          chats.messages?.lastOrNull?.content ??
+                                              "Start a message",
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      color: isDark
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                  if (chats.pinned ?? false)
+                                    const Icon(
+                                      CupertinoIcons.pin_fill,
+                                      size: 16,
+                                    )
+                                ],
                               ),
                             ],
                           ),
@@ -682,15 +705,16 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                   padding:
                       EdgeInsets.only(left: index == 0 ? 16 : 0, right: 16),
                   child: GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       HapticFeedback.lightImpact();
 
-                      pageOpen(ChatMusicScreen(artist: artist));
+                      await pageOpenWithResult(ChatMusicScreen(artist: artist));
+
+                      setState(() {});
                     },
                     child: Hero(
                       tag: artist.images?.firstOrNull?.url ?? "",
                       child: Stack(
-                        alignment: Alignment.bottomCenter,
                         children: [
                           customCachedImage(
                             width: 175,
@@ -700,41 +724,84 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                             url: artist.images?.firstOrNull?.url ?? "",
                             isDrive: false,
                           ),
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                                bottomLeft: Radius.circular(20),
-                                bottomRight: Radius.circular(20)),
-                            child: BackdropFilter(
-                              filter:
-                                  ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                              child: Container(
-                                width: 175,
-                                height: 60,
-                                padding: const EdgeInsets.all(10),
-                                color: Colors.grey.shade800.withOpacity(0.5),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    CustomText(
-                                      text: artist.name ?? "",
-                                      overflow: TextOverflow.ellipsis,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              MusicStorage.favouriteArtist.contains(artist.id)
+                                  ? SizedBox(
+                                      width: 175,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                right: 6, top: 6),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
+                                              child: BackdropFilter(
+                                                filter: ImageFilter.blur(
+                                                    sigmaX: 10.0, sigmaY: 10.0),
+                                                child: Container(
+                                                  width: 35,
+                                                  height: 35,
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                          5, 5, 5, 3),
+                                                  color: Colors.grey.shade800
+                                                      .withOpacity(0.5),
+                                                  child: const Icon(
+                                                    Icons.favorite_rounded,
+                                                    color: Colors.red,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : const SizedBox(),
+                              ClipRRect(
+                                borderRadius: const BorderRadius.only(
+                                    bottomLeft: Radius.circular(20),
+                                    bottomRight: Radius.circular(20)),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                      sigmaX: 10.0, sigmaY: 10.0),
+                                  child: Container(
+                                    width: 175,
+                                    height: 60,
+                                    padding: const EdgeInsets.all(10),
+                                    color:
+                                        Colors.grey.shade800.withOpacity(0.5),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        CustomText(
+                                          text: artist.name ?? "",
+                                          overflow: TextOverflow.ellipsis,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                        ),
+                                        CustomText(
+                                          text:
+                                              "${NumberFormat("#,##0", "en_US").format(artist.followers?.total ?? 0)} monthly listeners",
+                                          overflow: TextOverflow.ellipsis,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ],
                                     ),
-                                    CustomText(
-                                      text:
-                                          "${NumberFormat("#,##0", "en_US").format(artist.followers?.total ?? 0)} monthly listeners",
-                                      overflow: TextOverflow.ellipsis,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
                         ],
                       ),

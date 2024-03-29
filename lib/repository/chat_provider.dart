@@ -369,6 +369,16 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> pinChat(ChatRoom chats) async {
+    int index = _chats.indexWhere((e) => e.id == chats.id);
+
+    if (index != -1) {
+      _chats[index].pinned = !(_chats[index].pinned ?? false);
+      await saveChatsToString();
+      notifyListeners();
+    }
+  }
+
   Future<void> updateChat(ChatRoom chats) async {
     int index = _chats.indexWhere((e) => e.id == chats.id);
 

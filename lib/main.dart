@@ -8,6 +8,7 @@ import 'package:chatbot_app/utils/app_navigators.dart';
 import 'package:chatbot_app/repository/chat_provider.dart';
 import 'package:chatbot_app/utils/constants.dart';
 import 'package:chatbot_app/utils/image_storage.dart';
+import 'package:chatbot_app/utils/music_storage.dart';
 import 'package:chatbot_app/utils/shared_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -57,6 +58,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void initSplash() async {
+    await MusicStorage.loadStorage();
     await ImageStorage.loadImage();
     if (ImageStorage.listImage.isEmpty) {
       await UserRepo.getImageDrive();
