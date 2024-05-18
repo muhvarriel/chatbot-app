@@ -283,7 +283,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                     ),
                     //_storiesSection(),
                     //_videoSection(),
-                    _musicSection(),
+                    //_musicSection(),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
