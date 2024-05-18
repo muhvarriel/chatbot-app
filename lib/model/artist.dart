@@ -122,3 +122,30 @@ class Images {
     return data;
   }
 }
+
+class CacheArtist {
+  String? id;
+  String? about;
+
+  CacheArtist({this.id, this.about});
+
+  CacheArtist.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    about = json['about'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['about'] = about;
+    return data;
+  }
+
+  static List<CacheArtist> fromJsonToList(List<dynamic> jsonList) {
+    List<CacheArtist> cached = [];
+    for (var json in jsonList) {
+      cached.add(CacheArtist.fromJson(json));
+    }
+    return cached;
+  }
+}

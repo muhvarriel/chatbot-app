@@ -19,7 +19,6 @@ class UserRepo {
 
       return model;
     } catch (e) {
-      print('error $e');
       return null;
     }
   }
@@ -29,7 +28,6 @@ class UserRepo {
       final model = await generateModel();
 
       if (model == null) {
-        print('model is null');
         return null;
       }
 
@@ -38,7 +36,6 @@ class UserRepo {
 
       return response.text;
     } catch (e) {
-      print('error $e');
       return null;
     }
   }
@@ -49,7 +46,6 @@ class UserRepo {
       final model = await generateModel();
 
       if (model == null) {
-        print('model is null');
         return null;
       }
 
@@ -81,7 +77,7 @@ class UserRepo {
       List<String> listImage = [];
 
       final response = await dio.get(
-          "https://drive.google.com/drive/folders/1BVifYqPxqs9pcfSbwn_sgEnQun13d-SR");
+          "https://drive.google.com/drive/folders/1bxM-9Buj8hJYti-LDOH34utngjCu2CdZ");
 
       List<String> result = extractDataIds(response.data);
 

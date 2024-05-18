@@ -17,7 +17,6 @@ import 'package:chatbot_app/utils/video_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -210,6 +209,22 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                                           size: 18,
                                         )),
                             ),
+                          if (false)
+                            GestureDetector(
+                              onTap: () async {
+                                HapticFeedback.lightImpact();
+                              },
+                              child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  margin: const EdgeInsets.only(left: 10),
+                                  decoration: BoxDecoration(
+                                      color: Theme.of(context).cardColor,
+                                      borderRadius: BorderRadius.circular(10)),
+                                  child: const Icon(
+                                    Icons.music_note_rounded,
+                                    size: 18,
+                                  )),
+                            ),
                         ],
                       ),
                     ),
@@ -266,7 +281,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
                         ],
                       ),
                     ),
-                    _storiesSection(),
+                    //_storiesSection(),
                     //_videoSection(),
                     _musicSection(),
                     Column(

@@ -40,10 +40,10 @@ class MusicRepo {
   static Future<void> musicLoaded() async {
     List<Artist> listArtist = [];
     List<String> list = [
-      "41MozSoPIsD1dJM0CLPjZF",
+      "6KImCVD70vtIoJWnq6nGn3",
       "66CXWjxzNUsdJxJ2JdwvnR",
       "0kPb52ySN2k9P6wEZPTUzm",
-      "64tJ2EAv1R6UaZqc4iOCyj"
+      "6Sv2jkzH9sWQjwghW5ArMG"
     ];
 
     for (var i = 0; i < list.length; i++) {
@@ -77,7 +77,6 @@ class MusicRepo {
 
       return [response.statusCode, artists];
     } on DioException catch (e) {
-      print('error $e');
       return [e.response?.statusCode ?? 500, null];
     }
   }
@@ -90,7 +89,6 @@ class MusicRepo {
 
       return [response.statusCode, artists];
     } on DioException catch (e) {
-      print('error $e');
       return [e.response?.statusCode ?? 500, null];
     }
   }
@@ -104,7 +102,6 @@ class MusicRepo {
 
       return [response.statusCode, tracks];
     } on DioException catch (e) {
-      print('error $e');
       return [e.response?.statusCode ?? 500, null];
     }
   }
@@ -121,7 +118,6 @@ class MusicRepo {
 
       return [response.statusCode, tracks];
     } on DioException catch (e) {
-      print('error $e');
       return [e.response?.statusCode ?? 500, null];
     }
   }
@@ -134,7 +130,6 @@ class MusicRepo {
 
       return [response.statusCode, tracks];
     } on DioException catch (e) {
-      print('error $e');
       return [e.response?.statusCode ?? 500, null];
     }
   }
@@ -149,7 +144,6 @@ class MusicRepo {
 
       return [response.statusCode, genres];
     } on DioException catch (e) {
-      print('error $e');
       return [e.response?.statusCode ?? 500, null];
     }
   }

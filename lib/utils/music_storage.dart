@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:chatbot_app/model/artist.dart';
@@ -9,6 +10,8 @@ class MusicStorage {
 
   static List<Artist> listMusic = [];
   static List<String> favouriteArtist = [];
+  static List<CacheArtist> cacheArtist = [];
+  static List<CacheArtist> cacheAlbum = [];
 
   static Artist get randomMusic =>
       listMusic[Random().nextInt(listMusic.length)];
@@ -30,12 +33,44 @@ class MusicStorage {
     await saveStorage();
   }
 
+  static Future<void> addArtistAbout(CacheArtist data) async {
+    if (!cacheArtist.any((e) => e.id == data.id)) {
+      cacheArtist.add(data);
+      await saveStorage();
+    }
+  }
+
+  static Future<void> addAlbumAbout(CacheArtist data) async {
+    if (!cacheAlbum.any((e) => e.id == data.id)) {
+      cacheAlbum.add(data);
+      await saveStorage();
+    }
+  }
+
   static Future<void> saveStorage() async {
     await setSharedListString("favouriteArtist", favouriteArtist);
+
+    await setSharedString("cacheArtist", jsonEncode(cacheArtist));
+
+    await setSharedString("cacheAlbum", jsonEncode(cacheAlbum));
   }
 
   static Future<void> loadStorage() async {
     favouriteArtist = await getSharedListString("favouriteArtist");
+
+    String? savedCacheArtist = await getSharedString("cacheArtist");
+    if (savedCacheArtist != null &&
+        savedCacheArtist.isNotEmpty &&
+        savedCacheArtist != "[]") {
+      cacheArtist = CacheArtist.fromJsonToList(jsonDecode(savedCacheArtist));
+    }
+
+    String? savedCacheAlbum = await getSharedString("cacheAlbum");
+    if (savedCacheAlbum != null &&
+        savedCacheAlbum.isNotEmpty &&
+        savedCacheAlbum != "[]") {
+      cacheAlbum = CacheArtist.fromJsonToList(jsonDecode(savedCacheAlbum));
+    }
   }
 }
 

@@ -14,6 +14,7 @@ import 'package:chatbot_app/utils/app_navigators.dart';
 import 'package:chatbot_app/utils/music_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:like_button/like_button.dart';
 
@@ -134,16 +135,30 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
       }
     });
 
-    await UserRepo.generateContent(
-            text:
-                "Tell me about artist ${widget.artist.name ?? ""}, for more information genre is ${widget.artist.genres?.join(", ") ?? ""} and album is ${_artistAlbumResponse?.items?.map((e) => e.name).toList().join(", ")} and music is ${listTrack.map((e) => e.name).toList().join(", ")} in one paragraph so user can easy to read it")
-        .then((value) {
+    CacheArtist? cacheArtist = MusicStorage.cacheArtist
+        .firstWhereOrNull((e) => e.id == widget.artist.id);
+
+    if (cacheArtist != null) {
       if (mounted) {
         setState(() {
-          description = value;
+          description = cacheArtist.about;
         });
       }
-    });
+    } else {
+      await UserRepo.generateContent(
+              text:
+                  "Tell me about artist ${widget.artist.name ?? ""}, for more information genre is ${widget.artist.genres?.join(", ") ?? ""} and album is ${_artistAlbumResponse?.items?.map((e) => e.name).toList().join(", ")} and music is ${listTrack.map((e) => e.name).toList().join(", ")} in one paragraph so user can easy to read it")
+          .then((value) async {
+        if (mounted) {
+          setState(() {
+            description = value;
+          });
+        }
+
+        await MusicStorage.addArtistAbout(
+            CacheArtist(id: widget.artist.id, about: value));
+      });
+    }
   }
 
   @override
@@ -608,21 +623,33 @@ class _ChatMusicScreenState extends State<ChatMusicScreen> {
               initial = false;
 
               if (selectedAlbumTrack.isEmpty) {
-                getAlbumTrack(selectedAlbum?.id ?? "").then((value) {
+                getAlbumTrack(selectedAlbum?.id ?? "").then((value) async {
                   if (mounted) {
                     setState(() {});
                   }
 
-                  if (aboutAlbum == null) {
-                    UserRepo.generateContent(
+                  CacheArtist? cacheAlbum = MusicStorage.cacheAlbum
+                      .firstWhereOrNull((e) => e.id == selectedAlbum?.id);
+
+                  if (cacheAlbum != null) {
+                    if (mounted) {
+                      setState(() {
+                        aboutAlbum = cacheAlbum.about;
+                      });
+                    }
+                  } else {
+                    await UserRepo.generateContent(
                             text:
                                 "Tell me about album ${selectedAlbum?.name ?? ""} by ${selectedAlbum?.artists?.map((e) => e.name).toList().join(", ") ?? ""}, for more information genre is ${widget.artist.genres?.join(", ") ?? ""} and music is ${selectedAlbumTrack.map((e) => "${e.name ?? ""} by ${e.artists?.map((r) => r.name).toList().join(", ") ?? ""}").toList().join(", ")} release on ${formatDate("d MMMM y", date: selectedAlbum?.releaseDate)} in one paragraph so user can easy to read it")
-                        .then((valueAbout) {
+                        .then((valueAbout) async {
                       if (mounted) {
                         setState(() {
                           aboutAlbum = valueAbout;
                         });
                       }
+
+                      await MusicStorage.addAlbumAbout(CacheArtist(
+                          id: selectedAlbum?.id, about: valueAbout));
                     });
                   }
                 });
